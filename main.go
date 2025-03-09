@@ -163,7 +163,7 @@ func getForm() string {
 			<input id="bg" name="bg" type="color" 
 			placeholder="Background color" value="#ffffff" />
 		</div>
-        <button class="btn" type="submit">Générer le QRCODE</button>
+        <button class="btn" type="submit">Generate QRCODE</button>
     </form>
 	<div id="content">
 		` + getQrCode(DEFAULT_BASE64, os.Getenv("URL")+DEFAULT_URL) + `
