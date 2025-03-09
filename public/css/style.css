@@ -135,6 +135,9 @@ input{
         width: -webkit-fill-available;
         margin: 1rem 0 0 0;
     }
+    #content{
+        margin-bottom: 2rem;
+    }
     .flex-wrapper{
         flex-direction: column;
     }
@@ -158,4 +161,15 @@ use{
   @keyframes move-forever{
      0%{transform: translate(-2px , 0)}
    100%{transform: translate( 0px , 0)} 
+  }
+
+  #copyrights{
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0;
+    text-align: center;
+    color: #04A118;
+    text-shadow: 1px 1px 5px #fff;
   }

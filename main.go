@@ -225,6 +225,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			<img src="./public/images/logo.svg" alt="QR Code" />` + getForm() + `
 		</main>
 	</body>
+	` + Copyrights() + `
 	</html>`
 	w.Write([]byte(content))
+}
+
+func Copyrights() string {
+	return `<a id="copyrights" target="_blank" href="https://www.ferox-portal.com">© 2025 - Ferox Portal</a>`
 }
