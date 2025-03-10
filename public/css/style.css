@@ -38,7 +38,7 @@ main{
     justify-content: center;
 }
 .flex-wrapper{
-    justify-content: space-between;
+    justify-content: center;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -51,7 +51,7 @@ form,#content{
     margin-top: 2rem;
     display: inline-flex;
     flex-direction: column;
-    width: 50%;
+    width: 40%;
 }
 form{
     margin-right: 0.5rem;
@@ -79,6 +79,9 @@ form{
 }
 input[type=color]{
     padding: 0;
+}
+img{
+    max-width: 100%;
 }
 #content img{
     width: 150px;
@@ -130,6 +133,7 @@ input{
 @media (max-width: 1192px){
     body{
         padding: 0.5rem;
+        margin: 0;
     }
     form,#content{
         width: -webkit-fill-available;
