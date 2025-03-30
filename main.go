@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -231,5 +232,5 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func Copyrights() string {
-	return `<a id="copyrights" target="_blank" href="https://www.orizenh.com">© 2025 - ORIZENH</a>`
+	return `<a id="copyrights" target="_blank" href="https://www.orizenh.com">©` + time.Now().Format("2006") + ` - ORIZENH</a>`
 }
