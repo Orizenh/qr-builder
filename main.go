@@ -231,5 +231,5 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func Copyrights() string {
-	return `<a id="copyrights" target="_blank" href="https://www.ferox-portal.com">© 2025 - Ferox Portal</a>`
+	return `<a id="copyrights" target="_blank" href="https://www.orizenh.com">© 2025 - ORIZENH</a>`
 }
