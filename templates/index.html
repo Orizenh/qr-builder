@@ -1,0 +1,15 @@
+{{ define "index" }}
+<!doctype html>
+<html lang="en">
+    {{ template "header" . }}
+	<body>
+        {{ template "wave" . }}
+		<main class="flex center column">
+			<h1>QR Builder</h1>
+			<img src="./public/images/logo.svg" alt="QR Builder logo" />
+            {{ template "form" . }}
+		</main>
+	</body>
+	{{ template "copyrights" . }}
+</html>
+{{ end }}

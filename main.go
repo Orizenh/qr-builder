@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"image/color"
 	"net/http"
 	"os"
@@ -21,8 +23,21 @@ const DEFAULT_BASE64 string = "data:image/svg;base64,iVBORw0KGgoAAAANSUhEUgAAAQA
 const DEFAULT_URL string = "/api/generate?data=https://www.google.com&size=256&color=000000&bg=ffffff&return=base64"
 const DEFAULT_VALUE string = "https://www.google.com"
 
+var templates *template.Template
+
 func init() {
 	godotenv.Load()
+	templates = template.Must(template.New("index").ParseFiles(
+		"templates/index.html",
+		"templates/partials/copyrights.html",
+		"templates/partials/form.html",
+		"templates/partials/header.html",
+		"templates/partials/wave.html",
+		"templates/partials/qrcode.html",
+	))
+	for _, templ := range templates.Templates() {
+		fmt.Println("Loaded template", templ.Name())
+	}
 }
 
 func main() {
@@ -47,6 +62,36 @@ func hostIsAuth(r *http.Request) bool {
 		return true
 	}
 	return false
+}
+
+func RenderPartial(name string, data any) (string, error) {
+	var buf bytes.Buffer
+	err := templates.ExecuteTemplate(&buf, name, data)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func SetHeaders(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "max-age=31536000")
+	w.Header().Set("Accept-Encoding", "gzip, compress, br")
+}
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	SetHeaders(w)
+	err := templates.ExecuteTemplate(w, "index", map[string]any{
+		"Date":         time.Now().Format("2006"),
+		"Name":         "ORIZENH",
+		"Website":      "https://www.orizenh.com",
+		"DefaultValue": DEFAULT_VALUE,
+		"Base64Image":  template.URL(DEFAULT_BASE64),
+		"Path":         template.URL(os.Getenv("URL") + DEFAULT_URL),
+	})
+	if err != nil {
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
 }
 
 func HexToRgba(hex string) (color.RGBA, error) {
@@ -129,108 +174,16 @@ func GenerateQR(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fileData))
 		return
 	}
+	content, err := RenderPartial("qrcode", map[string]template.URL{
+		"Path":        template.URL(path),
+		"Base64Image": template.URL(base64Image),
+	})
+	if err != nil {
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
 	result, _ := json.Marshal(map[string]string{
-		"content": getQrCode(base64Image, path),
+		"content": content,
 	})
 	w.Write(result)
-}
-
-func getQrCode(base64Image string, path string) string {
-	return `<a href="` + path + `&return=image" target="_blank">
-		<img src="` + base64Image + `" alt="QR Code" />
-	</a>
-	<textarea id="copy" readonly>` + base64Image + `</textarea>
-	<button class="btn" onclick="copyToClipboard('#copy')">Copy base64</button>`
-}
-
-func getForm() string {
-	return `
-	<div class="flex-wrapper">
-	<form id="generateQR" method="POST"
-    data-path="/api/generate">
-		<div class="input-group">
-			<label for="data">URL to append to the QR</label>
-			<input id="data" name="data" type="text" 
-			value="` + DEFAULT_VALUE + `"
-			placeholder="example: https://www.googe.com" />
-		</div>
-		<div class="input-group">
-			<label for="color">Main color</label>
-			<input id="color" name="color" type="color"
-			placeholder="Main color" value="#000000" />
-		</div>
-		<div class="input-group">
-			<label for="bg">Background</label>
-			<input id="bg" name="bg" type="color" 
-			placeholder="Background color" value="#ffffff" />
-		</div>
-        <button class="btn" type="submit">Generate QRCODE</button>
-    </form>
-	<div id="content">
-		` + getQrCode(DEFAULT_BASE64, os.Getenv("URL")+DEFAULT_URL) + `
-	</div>
-	</div>
-`
-}
-
-func getHeader() string {
-	return `<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/png" href="./public/images/favicon-96x96.png" sizes="96x96" />
-		<link rel="icon" type="image/svg+xml" href="./public/images/favicon.svg" />
-		<link rel="shortcut icon" href="./public/images/favicon.ico" />
-		<link rel="apple-touch-icon" sizes="180x180" href="./public/images/apple-touch-icon.png" />
-		<meta name="apple-mobile-web-app-title" content="QR Builder" />
-		<link rel="manifest" href="/site.webmanifest" />
-		<meta name="theme-color" content="#4285f4"> 
-		<meta name="viewport" content="width=device-width, initial-scale=1" />	
-		<link href="./public/css/style.css" rel="stylesheet">
-		<title>QR Builder</title>
-		<meta name="description" content="QR Builder is a simple tool to generate QR Code" />
-		<meta name="keywords" content="QR Code, QR Builder, QR Code Generator" />
-		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js" defer></script>
-		<script src="./public/js/functions.js" defer></script>
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-	</head>`
-}
-
-func Index(w http.ResponseWriter, r *http.Request) {
-	content := `
-<!doctype html>
-<html lang="en">
-	` + getHeader() + `
-	<body>
-	<svg 
-	id="waves"
-	viewBox="0 0 2 1" 
-	preserveAspectRatio="none">
-	 <defs>
-	   <path id="w" 
-		 d="
-		 m0 1v-.5 
-		 q.5.5 1 0
-		 t1 0 1 0 1 0
-		 v.5z" />
-	 </defs>
-	 <g>
-	  <use href="#w" y=".0" fill="#04a118" />
-	  <use href="#w" y=".1" fill="#70b529" />
-	  <use href="#w" y=".2" fill="#91cc25" />
-	 </g>
-	</svg>
-		<main class="flex center column">
-			<h1>QR Builder</h1>
-			<img src="./public/images/logo.svg" alt="QR Code" />` + getForm() + `
-		</main>
-	</body>
-	` + Copyrights() + `
-	</html>`
-	w.Write([]byte(content))
-}
-
-func Copyrights() string {
-	return `<a id="copyrights" target="_blank" href="https://www.orizenh.com">©` + time.Now().Format("2006") + ` - ORIZENH</a>`
 }

@@ -1,0 +1,20 @@
+{{ define "wave" }}
+<svg 
+	id="waves"
+	viewBox="0 0 2 1" 
+	preserveAspectRatio="none">
+	 <defs>
+	   <path id="w" 
+		 d="
+		 m0 1v-.5 
+		 q.5.5 1 0
+		 t1 0 1 0 1 0
+		 v.5z" />
+	 </defs>
+	 <g>
+	  <use href="#w" y=".0" fill="#04a118" />
+	  <use href="#w" y=".1" fill="#70b529" />
+	  <use href="#w" y=".2" fill="#91cc25" />
+	 </g>
+	</svg>
+{{ end }}

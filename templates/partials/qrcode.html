@@ -1,0 +1,8 @@
+{{ define "qrcode" }}
+    <a href="{{.Path}}&return=image" target="_blank">
+		<img src="{{.Base64Image}}" alt="QR Code" />
+	</a>
+	<label for="copy" aria-labelledby="copy">RAW Base64 output</label>	
+	<textarea name="copy" id="copy" readonly>{{.Base64Image}}</textarea>
+	<button class="btn" onclick="copyToClipboard('#copy')">Copy base64</button>
+{{ end }}

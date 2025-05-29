@@ -1,0 +1,27 @@
+{{ define "form" }}
+<div class="flex-wrapper">
+	<form id="generateQR" method="POST"
+    data-path="/api/generate">
+		<div class="input-group">
+			<label for="data">URL to append to the QR</label>
+			<input id="data" name="data" type="text" 
+			value="{{.DefaultValue}}"
+			placeholder="example: https://www.googe.com" />
+		</div>
+		<div class="input-group">
+			<label for="color">Main color</label>
+			<input id="color" name="color" type="color"
+			placeholder="Main color" value="#000000" />
+		</div>
+		<div class="input-group">
+			<label for="bg">Background</label>
+			<input id="bg" name="bg" type="color" 
+			placeholder="Background color" value="#ffffff" />
+		</div>
+        <button class="btn" type="submit">Generate QRCODE</button>
+    </form>
+	<div id="content">
+		{{ template "qrcode" . }}
+	</div>
+	</div>
+{{ end }}
