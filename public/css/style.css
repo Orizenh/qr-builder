@@ -1,3 +1,9 @@
+:root{
+    --green: #04620F;
+    --dark: #313131;
+    --white: #fff;
+}
+
 body{
     padding: 1rem;
     font-family: "Roboto", sans-serif;
@@ -46,7 +52,7 @@ main{
 }
 form,#content{
     padding: 1rem;
-    background: #fff;
+    background: var(--white);
     border-radius: 0.5rem;
     margin-top: 2rem;
     display: inline-flex;
@@ -104,21 +110,21 @@ input{
     padding: 0.5rem;
     border-radius: 0;
     border: 0;
-    border-bottom: 1px #313131 solid;
+    border-bottom: 1px var(--dark) solid;
     width: 100%;
 }
 .btn{
     padding: 0.5rem;
     border-radius: 5px;
-    background-color: #04A118;
+    background-color: var(--green);
     color: #fff;
     transition-duration: 0.4s;
-    border: 2px #04A118 solid;
+    border: 2px var(--green) solid;
     width: 100%;
 }
 .btn:hover{
     background-color: transparent;
-    color: #04A118;
+    color: var(--green);
     transform: scale(1.02);
     transition-duration: 0.4s;
     cursor: pointer;
@@ -174,6 +180,6 @@ use{
     transform: translateX(-50%);
     padding: 0.5rem 0;
     text-align: center;
-    color: #04A118;
-    text-shadow: 1px 1px 5px #fff;
+    color: var(--green);
+    text-shadow: 1px 1px 5px var(--white);
   }
