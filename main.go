@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"image/color"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"github.com/skip2/go-qrcode"
+	qrcodeLib "github.com/skip2/go-qrcode"
 )
 
 const DIRECTORY string = "public"
@@ -24,6 +25,15 @@ const DEFAULT_URL string = "/api/generate?data=https://www.google.com&size=256&c
 const DEFAULT_VALUE string = "https://www.google.com"
 
 var templates *template.Template
+
+type Qrcode struct {
+	Url         template.URL
+	Base64Image template.URL
+	Width       int
+	Height      int
+}
+
+var qrcode *Qrcode
 
 func init() {
 	godotenv.Load()
@@ -37,6 +47,12 @@ func init() {
 	))
 	for _, templ := range templates.Templates() {
 		fmt.Println("Loaded template", templ.Name())
+	}
+	qrcode = &Qrcode{
+		Url:         template.URL(os.Getenv("URL") + DEFAULT_URL),
+		Base64Image: template.URL(DEFAULT_BASE64),
+		Width:       150,
+		Height:      150,
 	}
 }
 
@@ -53,15 +69,10 @@ func main() {
 }
 
 func hostIsAuth(r *http.Request) bool {
+	urlHost := strings.TrimPrefix(os.Getenv("URL"), "https://")
 	origin := r.Header.Get("origin")
-	if origin != "" && strings.Contains(origin, os.Getenv("URL")) {
-		return true
-	}
 	referer := r.Header.Get("referer")
-	if referer != "" && strings.Contains(referer, os.Getenv("URL")) {
-		return true
-	}
-	return false
+	return strings.Contains(origin, urlHost) || strings.Contains(referer, urlHost)
 }
 
 func RenderPartial(name string, data any) (string, error) {
@@ -85,8 +96,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		"Name":         "ORIZENH",
 		"Website":      "https://www.orizenh.com",
 		"DefaultValue": DEFAULT_VALUE,
-		"Base64Image":  template.URL(DEFAULT_BASE64),
-		"Path":         template.URL(os.Getenv("URL") + DEFAULT_URL),
+		"Url":          qrcode.Url,
+		"Base64Image":  qrcode.Base64Image,
+		"Width":        qrcode.Width,
+		"Height":       qrcode.Height,
 	})
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
@@ -111,14 +124,18 @@ func GenerateQR(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"Method not authorized"}`, http.StatusMethodNotAllowed)
 		return
 	}
-
 	if !hostIsAuth(r) {
 		http.Error(w, `{error: Unauthorized}`, http.StatusUnauthorized)
 		return
 	}
-
 	r.ParseForm()
+	var err error
 	data := r.Form.Get("data")
+	_, err = url.ParseRequestURI(data)
+	if err != nil {
+		http.Error(w, `{error: `+err.Error()+`}`, http.StatusBadRequest)
+		return
+	}
 	path := os.Getenv("URL") + "/api/generate?data=" + data
 	if data == "" {
 		http.Error(w, `{"error":"You have to fill the field"}`, http.StatusBadRequest)
@@ -136,7 +153,6 @@ func GenerateQR(w http.ResponseWriter, r *http.Request) {
 	imageName := uuid.New().String() + ".png"
 	colorMain := color.RGBA{R: 0, G: 0, B: 0, A: 255}
 	colorSecondary := color.RGBA{R: 255, G: 255, B: 255, A: 255}
-	var err error
 	colorRAW := "000000"
 	if r.Form.Get("color") != "" {
 		colorRAW = strings.Replace(r.Form.Get("color"), "#", "", -1)
@@ -157,7 +173,7 @@ func GenerateQR(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	path += "&bg=" + bgRAW
-	err = qrcode.WriteColorFile(data, qrcode.Medium, size, colorSecondary, colorMain, imageName)
+	err = qrcodeLib.WriteColorFile(data, qrcodeLib.Medium, size, colorSecondary, colorMain, imageName)
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 		return
@@ -174,10 +190,9 @@ func GenerateQR(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fileData))
 		return
 	}
-	content, err := RenderPartial("qrcode", map[string]template.URL{
-		"Path":        template.URL(path),
-		"Base64Image": template.URL(base64Image),
-	})
+	qrcode.Url = template.URL(path)
+	qrcode.Base64Image = template.URL(base64Image)
+	content, err := RenderPartial("qrcode", qrcode)
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 		return
